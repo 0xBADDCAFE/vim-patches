@@ -3,12 +3,20 @@ vim-patches
 
 patches applied my Vim.
 
+patch authors
+-------------
+
 `*1` kaoriya's patch
+
   https://bitbucket.org/koron/vim-kaoriya-patches/src
+
 `*2` k-takata's patch
+
   https://bitbucket.org/k_takata/vim-ktakata-mq/src
 
-reject:
+reject
+------
+
   I can't apply or original of fixed patches or unsure future.
 
 ```
