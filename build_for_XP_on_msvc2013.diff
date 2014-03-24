@@ -1,0 +1,16 @@
+diff --git a/src/Make_mvc.mak b/src/Make_mvc.mak
+index ab02890..a46384f 100644
+--- a/src/Make_mvc.mak
++++ b/src/Make_mvc.mak
+@@ -935,7 +935,11 @@ LINK_PDB = /PDB:$(VIM).pdb -debug
+ #
+ !message
+ 
++!if ("$(CPU)" == "i386") && ("$(MSVCVER)" == "12.0")
++conflags = /nologo /subsystem:$(SUBSYSTEM),5.01
++!else
+ conflags = /nologo /subsystem:$(SUBSYSTEM)
++!endif
+ 
+ PATHDEF_SRC = $(OUTDIR)\pathdef.c
+ 

@@ -1,0 +1,219 @@
+diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
+index 9fb67a2..30fdc9c 100644
+--- a/runtime/doc/options.txt
++++ b/runtime/doc/options.txt
+@@ -3711,6 +3711,9 @@ A jump table for the options with a short description can be found at |Q_op|.
+ 	  'F'	Add a footer.  Only for Motif.  See |gui-footer|.
+ 
+ 
++	  'C'	Remove caption (title) bar.  Support Win32 only.
++
++
+ 						*'guipty'* *'noguipty'*
+ 'guipty'		boolean	(default on)
+ 			global
+diff --git a/src/gui.c b/src/gui.c
+index b667ba3..f7bd1e7 100644
+--- a/src/gui.c
++++ b/src/gui.c
+@@ -3348,6 +3348,8 @@ gui_init_which_components(oldval)
+     static int	prev_tearoff = -1;
+     int		using_tearoff = FALSE;
+ #endif
++    static int	prev_nocaption = -1;
++    int		using_caption = TRUE;
+ 
+     char_u	*p;
+     int		i;
+@@ -3425,6 +3427,9 @@ gui_init_which_components(oldval)
+ 		using_tearoff = TRUE;
+ #endif
+ 		break;
++	    case GO_NOCAPTION:
++		using_caption = FALSE;
++		break;
+ 	    default:
+ 		/* Ignore options that are not supported */
+ 		break;
+@@ -3535,6 +3540,14 @@ gui_init_which_components(oldval)
+ 	    prev_tearoff = using_tearoff;
+ 	}
+ #endif
++	if (using_caption != prev_nocaption)
++	{
++#if defined(WIN3264)
++	    gui_mch_show_caption(using_caption);
++#endif
++	    prev_nocaption = using_caption;
++	    need_set_size = TRUE;
++	}
+ 	if (need_set_size != 0)
+ 	{
+ #ifdef FEAT_GUI_GTK
+diff --git a/src/gui_w32.c b/src/gui_w32.c
+index 2d57fbb..ee98010 100644
+--- a/src/gui_w32.c
++++ b/src/gui_w32.c
+@@ -440,6 +440,59 @@ gui_is_win32s(void)
+     return (os_version.dwPlatformId == VER_PLATFORM_WIN32s);
+ }
+ 
++    static int
++get_caption_height(void)
++{
++    /*
++     * A window's caption includes extra 1 dot margin.  When caption is
++     * removed the margin also be removed.  So we must return -1 when
++     * caption is diabled.
++     */
++    return GetWindowLong(s_hwnd, GWL_STYLE) & WS_CAPTION ?
++	GetSystemMetrics(SM_CYCAPTION) : -1;
++}
++
++    void
++gui_mch_show_caption(int show)
++{
++    LONG style, newstyle;
++
++    /* Remove caption when title is null. */
++    style = newstyle = GetWindowLong(s_hwnd, GWL_STYLE);
++    if (show && !(style & WS_CAPTION))
++	newstyle = style | WS_CAPTION;
++    else if (!show && (style & WS_CAPTION))
++	newstyle = style & ~WS_CAPTION;
++    if (newstyle != style)
++    {
++	SetWindowLong(s_hwnd, GWL_STYLE, newstyle);
++	SetWindowPos(s_hwnd, NULL, 0, 0, 0, 0,
++		SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
++	gui_set_shellsize(FALSE, FALSE, RESIZE_BOTH);
++    }
++}
++
++/*
++ * Return TRUE when Visual Style is enabled.
++ */
++    static int
++is_visual_style_enabled(void)
++{
++    HANDLE hUxtheme;
++    static BOOL (WINAPI *pIsThemeActive)(void) = NULL;
++    static BOOL loaded = FALSE;
++
++    if (!loaded) {
++	hUxtheme = GetModuleHandle("uxtheme.dll");
++	if (hUxtheme != NULL)
++	    pIsThemeActive = (void*)GetProcAddress(hUxtheme, "IsThemeActive");
++	loaded = TRUE;
++    }
++    if (pIsThemeActive)
++	return pIsThemeActive();
++    return FALSE;
++}
++
+ #ifdef FEAT_MENU
+ /*
+  * Figure out how high the menu bar is at the moment.
+@@ -471,7 +524,7 @@ gui_mswin_get_menu_height(
+ 	    {
+ 		RECT r1, r2;
+ 		int frameht = GetSystemMetrics(SM_CYFRAME);
+-		int capht = GetSystemMetrics(SM_CYCAPTION);
++ 		int capht = get_caption_height();
+ 
+ 		/* get window rect of s_hwnd
+ 		 * get client rect of s_hwnd
+@@ -1516,7 +1569,7 @@ gui_mch_init(void)
+ 	    return FAIL;
+     }
+     s_textArea = CreateWindowEx(
+-	WS_EX_CLIENTEDGE,
++	is_visual_style_enabled() ? 0 : WS_EX_CLIENTEDGE,
+ 	szTextAreaClass, "Vim text area",
+ 	WS_CHILD | WS_VISIBLE, 0, 0,
+ 	100,				/* Any value will do for now */
+@@ -1565,7 +1618,9 @@ gui_mch_init(void)
+     /*
+      * Start out by adding the configured border width into the border offset
+      */
+-    gui.border_offset = gui.border_width + 2;	/*CLIENT EDGE*/
++    gui.border_offset = gui.border_width;
++    if (!is_visual_style_enabled())
++	gui.border_offset += 2;	    /*CLIENT EDGE*/
+ 
+     /*
+      * Set up for Intellimouse processing
+@@ -1698,7 +1753,7 @@ gui_mch_set_shellsize(int width, int height,
+                          GetSystemMetrics(SM_CXPADDEDBORDER)) * 2;
+     win_height = height + (GetSystemMetrics(SM_CYFRAME) +
+                            GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
+-			+ GetSystemMetrics(SM_CYCAPTION)
++			+ get_caption_height()
+ #ifdef FEAT_MENU
+ 			+ gui_mswin_get_menu_height(FALSE)
+ #endif
+@@ -2557,7 +2612,7 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
+     *screen_h = workarea_rect.bottom - workarea_rect.top
+ 		- (GetSystemMetrics(SM_CYFRAME) +
+                    GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
+-		- GetSystemMetrics(SM_CYCAPTION)
++		- get_caption_height()
+ #ifdef FEAT_MENU
+ 		- gui_mswin_get_menu_height(FALSE)
+ #endif
+diff --git a/src/gui_w48.c b/src/gui_w48.c
+index d8ffc15..276a904 100644
+--- a/src/gui_w48.c
++++ b/src/gui_w48.c
+@@ -139,6 +139,7 @@ typedef int WNDPROC;
+ static void _OnPaint( HWND hwnd);
+ static void clear_rect(RECT *rcp);
+ static int gui_mswin_get_menu_height(int fix_window);
++static int get_caption_height(void);
+ 
+ static WORD		s_dlgfntheight;		/* height of the dialog font */
+ static WORD		s_dlgfntwidth;		/* width of the dialog font */
+@@ -2920,7 +2921,7 @@ gui_mswin_get_valid_dimensions(
+     base_height = gui_get_base_height()
+ 	+ (GetSystemMetrics(SM_CYFRAME) +
+            GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
+-	+ GetSystemMetrics(SM_CYCAPTION)
++	+ get_caption_height()
+ #ifdef FEAT_MENU
+ 	+ gui_mswin_get_menu_height(FALSE)
+ #endif
+@@ -3287,7 +3288,7 @@ gui_mch_newfont()
+ 		     rect.bottom - rect.top
+ 			- (GetSystemMetrics(SM_CYFRAME) +
+                            GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
+-			- GetSystemMetrics(SM_CYCAPTION)
++			- get_caption_height()
+ #ifdef FEAT_MENU
+ 			- gui_mswin_get_menu_height(FALSE)
+ #endif
+diff --git a/src/option.h b/src/option.h
+index ce2dd00..122b9c9 100644
+--- a/src/option.h
++++ b/src/option.h
+@@ -236,7 +236,8 @@
+ #define GO_TOOLBAR	'T'		/* add toolbar */
+ #define GO_FOOTER	'F'		/* add footer */
+ #define GO_VERTICAL	'v'		/* arrange dialog buttons vertically */
+-#define GO_ALL		"aAbcefFghilmMprtTv" /* all possible flags for 'go' */
++#define GO_NOCAPTION	'C'		/* remove caption bar */
++#define GO_ALL		"aAbcCefFghilmMprtTv" /* all possible flags for 'go' */
+ 
+ /* flags for 'comments' option */
+ #define COM_NEST	'n'		/* comments strings nest */
+diff --git a/src/proto/gui_w32.pro b/src/proto/gui_w32.pro
+index a333233..08c7ce3 100644
+--- a/src/proto/gui_w32.pro
++++ b/src/proto/gui_w32.pro
+@@ -59,6 +59,7 @@ char_u *gui_mch_browsedir __ARGS((char_u *title, char_u *initdir));
+ char_u *gui_mch_browse __ARGS((int saving, char_u *title, char_u *dflt, char_u *ext, char_u *initdir, char_u *filter));
+ int get_cmd_args __ARGS((char *prog, char *cmdline, char ***argvp, char **tofree));
+ int gui_is_win32s __ARGS((void));
++void gui_mch_show_caption __ARGS((int show));
+ void gui_mch_set_parent __ARGS((char *title));
+ void gui_mch_prepare __ARGS((int *argc, char **argv));
+ int gui_mch_init __ARGS((void));

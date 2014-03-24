@@ -1,0 +1,30 @@
+diff -r 8c8cdda36022 src/popupmnu.c
+--- a/src/popupmnu.c	Wed Aug 14 14:18:41 2013 +0200
++++ b/src/popupmnu.c	Thu Aug 15 22:06:10 2013 +0900
+@@ -639,7 +639,7 @@
+ 		    {
+ 			/* Return cursor to where we were */
+ 			validate_cursor();
+-			redraw_later(SOME_VALID);
++			redraw_win_later(curwin, REDRAW_TOP);
+ 
+ 			/* When the preview window was resized we need to
+ 			 * update the view on the buffer.  Only go back to
+@@ -654,7 +654,7 @@
+ 			/* Update the screen before drawing the popup menu.
+ 			 * Enable updating the status lines. */
+ 			pum_do_redraw = TRUE;
+-			update_screen(0);
++			win_redr_status(curwin);
+ 			pum_do_redraw = FALSE;
+ 
+ 			if (!resized && win_valid(curwin_save))
+@@ -663,7 +663,7 @@
+ 			/* May need to update the screen again when there are
+ 			 * autocommands involved. */
+ 			pum_do_redraw = TRUE;
+-			update_screen(0);
++			win_redr_status(curwin);
+ 			pum_do_redraw = FALSE;
+ 		    }
+ 		}

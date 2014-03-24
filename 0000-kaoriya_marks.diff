@@ -1,0 +1,29 @@
+
+<!-- saved from url=(0116)https://bitbucket.org/koron/vim-kaoriya-patches/raw/44ecfe340d3038c2532b806408fd16e084cf0a58/0000-kaoriya_marks.diff -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS"></head><body><pre style="word-wrap: break-word; white-space: pre-wrap;"># HG changeset patch
+# Parent a079ef0ce00173db42e2f60beee84b5cec71a505
+add +kaoriya marks
+
+diff -r a079ef0ce001 src/eval.c
+--- a/src/eval.c	Sat Apr 06 17:26:26 2013 +0200
++++ b/src/eval.c	Fri Apr 12 01:58:23 2013 +0900
+@@ -12248,6 +12248,7 @@
+ #ifdef FEAT_JUMPLIST
+ 	"jumplist",
+ #endif
++	"kaoriya",
+ #ifdef FEAT_KEYMAP
+ 	"keymap",
+ #endif
+diff -r a079ef0ce001 src/version.c
+--- a/src/version.c	Sat Apr 06 17:26:26 2013 +0200
++++ b/src/version.c	Fri Apr 12 01:58:23 2013 +0900
+@@ -287,6 +287,7 @@
+ #else
+ 	"-keymap",
+ #endif
++	"+kaoriya",
+ #ifdef FEAT_LANGMAP
+ 	"+langmap",
+ #else
+</pre></body></html>
