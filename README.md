@@ -3,6 +3,14 @@ vim-patches
 
 patches applied my Vim.
 
+apply patch:
+
+```Shell:
+git clone https://github.com/0xBADDCAFE/vim-patches.git
+git apply --check vim-patches/*.diff
+git apply vim-patches/*.diff
+```
+
 patch authors
 -------------
 
