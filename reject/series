@@ -1,0 +1,35 @@
+2000-efficient_printing.diff
+  it's too old.
+X004_01-rmdir_support_symlinks.diff
+  already taken.
+X005-eval_marks.diff
+  https://github.com/vim-jp/issues/issues/55
+X008-async_job.diff
+  incomplete patch.
+disable_regexp_logs.diff
+  it effective when debug build.
+tab-xyz.diff
+  it couldn't use `[i` command.
+2000-efficient_printing.diff #+obsoletes
+2007-refactor_vim_strchr.diff #+obsoletes
+2510-uimfep_support.diff #-no_kaoriya #+obsoletes
+
+
+
+
+
+
+2000-efficient_printing.diff
+2007-refactor_vim_strchr.diff
+2510-uimfep_support.diff
+disable_regexp_logs.diff
+series
+tab-xyz.diff
+X003-csearch_highlight.diff
+X004-eval_rmdir.diff
+X004_01-rmdir_support_symlinks.diff
+X006-enc_considered_setenv.diff
+X007-make_compact_func.diff
+X008-async_job.diff
+X009-lasteol_impl.diff
+X010-autoload_cache.diff
