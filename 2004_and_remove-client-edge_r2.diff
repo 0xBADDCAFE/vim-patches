@@ -1,8 +1,8 @@
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index 9fb67a2..30fdc9c 100644
+index 2dcfa19..b182e4f 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
-@@ -3711,6 +3711,9 @@ A jump table for the options with a short description can be found at |Q_op|.
+@@ -3751,6 +3751,9 @@ A jump table for the options with a short description can be found at |Q_op|.
  	  'F'	Add a footer.  Only for Motif.  See |gui-footer|.
  
  
@@ -13,10 +13,10 @@ index 9fb67a2..30fdc9c 100644
  'guipty'		boolean	(default on)
  			global
 diff --git a/src/gui.c b/src/gui.c
-index b667ba3..f7bd1e7 100644
+index 5516d96..6ed222b 100644
 --- a/src/gui.c
 +++ b/src/gui.c
-@@ -3348,6 +3348,8 @@ gui_init_which_components(oldval)
+@@ -3346,6 +3346,8 @@ gui_init_which_components(oldval)
      static int	prev_tearoff = -1;
      int		using_tearoff = FALSE;
  #endif
@@ -25,7 +25,7 @@ index b667ba3..f7bd1e7 100644
  
      char_u	*p;
      int		i;
-@@ -3425,6 +3427,9 @@ gui_init_which_components(oldval)
+@@ -3423,6 +3425,9 @@ gui_init_which_components(oldval)
  		using_tearoff = TRUE;
  #endif
  		break;
@@ -35,7 +35,7 @@ index b667ba3..f7bd1e7 100644
  	    default:
  		/* Ignore options that are not supported */
  		break;
-@@ -3535,6 +3540,14 @@ gui_init_which_components(oldval)
+@@ -3533,6 +3538,14 @@ gui_init_which_components(oldval)
  	    prev_tearoff = using_tearoff;
  	}
  #endif
@@ -51,10 +51,10 @@ index b667ba3..f7bd1e7 100644
  	{
  #ifdef FEAT_GUI_GTK
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index 2d57fbb..ee98010 100644
+index 0368dda..a8d3cd4 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
-@@ -440,6 +440,59 @@ gui_is_win32s(void)
+@@ -579,6 +579,59 @@ gui_is_win32s(void)
      return (os_version.dwPlatformId == VER_PLATFORM_WIN32s);
  }
  
@@ -114,7 +114,7 @@ index 2d57fbb..ee98010 100644
  #ifdef FEAT_MENU
  /*
   * Figure out how high the menu bar is at the moment.
-@@ -471,7 +524,7 @@ gui_mswin_get_menu_height(
+@@ -610,7 +663,7 @@ gui_mswin_get_menu_height(
  	    {
  		RECT r1, r2;
  		int frameht = GetSystemMetrics(SM_CYFRAME);
@@ -123,7 +123,7 @@ index 2d57fbb..ee98010 100644
  
  		/* get window rect of s_hwnd
  		 * get client rect of s_hwnd
-@@ -1516,7 +1569,7 @@ gui_mch_init(void)
+@@ -1655,7 +1708,7 @@ gui_mch_init(void)
  	    return FAIL;
      }
      s_textArea = CreateWindowEx(
@@ -132,7 +132,7 @@ index 2d57fbb..ee98010 100644
  	szTextAreaClass, "Vim text area",
  	WS_CHILD | WS_VISIBLE, 0, 0,
  	100,				/* Any value will do for now */
-@@ -1565,7 +1618,9 @@ gui_mch_init(void)
+@@ -1704,7 +1757,9 @@ gui_mch_init(void)
      /*
       * Start out by adding the configured border width into the border offset
       */
@@ -143,26 +143,26 @@ index 2d57fbb..ee98010 100644
  
      /*
       * Set up for Intellimouse processing
-@@ -1698,7 +1753,7 @@ gui_mch_set_shellsize(int width, int height,
-                          GetSystemMetrics(SM_CXPADDEDBORDER)) * 2;
+@@ -1842,7 +1897,7 @@ gui_mch_set_shellsize(int width, int height,
+ 			 GetSystemMetrics(SM_CXPADDEDBORDER)) * 2;
      win_height = height + (GetSystemMetrics(SM_CYFRAME) +
-                            GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
+ 			   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
 -			+ GetSystemMetrics(SM_CYCAPTION)
 +			+ get_caption_height()
  #ifdef FEAT_MENU
  			+ gui_mswin_get_menu_height(FALSE)
  #endif
-@@ -2557,7 +2612,7 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
+@@ -2736,7 +2791,7 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
      *screen_h = workarea_rect.bottom - workarea_rect.top
  		- (GetSystemMetrics(SM_CYFRAME) +
-                    GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
+ 		   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
 -		- GetSystemMetrics(SM_CYCAPTION)
 +		- get_caption_height()
  #ifdef FEAT_MENU
  		- gui_mswin_get_menu_height(FALSE)
  #endif
 diff --git a/src/gui_w48.c b/src/gui_w48.c
-index d8ffc15..276a904 100644
+index cd7fdde..9fb7aba 100644
 --- a/src/gui_w48.c
 +++ b/src/gui_w48.c
 @@ -139,6 +139,7 @@ typedef int WNDPROC;
@@ -173,7 +173,7 @@ index d8ffc15..276a904 100644
  
  static WORD		s_dlgfntheight;		/* height of the dialog font */
  static WORD		s_dlgfntwidth;		/* width of the dialog font */
-@@ -2920,7 +2921,7 @@ gui_mswin_get_valid_dimensions(
+@@ -2934,7 +2935,7 @@ gui_mswin_get_valid_dimensions(
      base_height = gui_get_base_height()
  	+ (GetSystemMetrics(SM_CYFRAME) +
             GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
@@ -182,7 +182,7 @@ index d8ffc15..276a904 100644
  #ifdef FEAT_MENU
  	+ gui_mswin_get_menu_height(FALSE)
  #endif
-@@ -3287,7 +3288,7 @@ gui_mch_newfont()
+@@ -3322,7 +3323,7 @@ gui_mch_newfont()
  		     rect.bottom - rect.top
  			- (GetSystemMetrics(SM_CYFRAME) +
                             GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
@@ -192,10 +192,10 @@ index d8ffc15..276a904 100644
  			- gui_mswin_get_menu_height(FALSE)
  #endif
 diff --git a/src/option.h b/src/option.h
-index ce2dd00..122b9c9 100644
+index 696d70d..107aa53 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -236,7 +236,8 @@
+@@ -237,7 +237,8 @@
  #define GO_TOOLBAR	'T'		/* add toolbar */
  #define GO_FOOTER	'F'		/* add footer */
  #define GO_VERTICAL	'v'		/* arrange dialog buttons vertically */
@@ -206,10 +206,10 @@ index ce2dd00..122b9c9 100644
  /* flags for 'comments' option */
  #define COM_NEST	'n'		/* comments strings nest */
 diff --git a/src/proto/gui_w32.pro b/src/proto/gui_w32.pro
-index a333233..08c7ce3 100644
+index 88fbf67..aebb8d7 100644
 --- a/src/proto/gui_w32.pro
 +++ b/src/proto/gui_w32.pro
-@@ -59,6 +59,7 @@ char_u *gui_mch_browsedir __ARGS((char_u *title, char_u *initdir));
+@@ -61,6 +61,7 @@ char_u *gui_mch_browsedir __ARGS((char_u *title, char_u *initdir));
  char_u *gui_mch_browse __ARGS((int saving, char_u *title, char_u *dflt, char_u *ext, char_u *initdir, char_u *filter));
  int get_cmd_args __ARGS((char *prog, char *cmdline, char ***argvp, char **tofree));
  int gui_is_win32s __ARGS((void));

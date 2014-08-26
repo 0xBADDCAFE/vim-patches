@@ -5,7 +5,7 @@ use Vim's rich icon
 diff --git a/src/Make_mvc.mak b/src/Make_mvc.mak
 --- a/src/Make_mvc.mak
 +++ b/src/Make_mvc.mak
-@@ -1189,7 +1189,7 @@
+@@ -1210,7 +1210,7 @@
  	$(CC) $(CFLAGS) $(XPM_INC) xpm_w32.c
  
  $(OUTDIR)/vim.res:	$(OUTDIR) vim.rc gvim.exe.mnf version.h tools.bmp \
